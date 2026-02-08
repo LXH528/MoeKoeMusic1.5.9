@@ -24,13 +24,18 @@ WORKDIR /app
 # Install Nginx
 RUN apk add --no-cache nginx
 
-# Copy API code
-COPY ./api ./api
+# 先复制 API 的 package.json 文件
+COPY ./api/package*.json ./api/
+
 # Install API dependencies
 WORKDIR /app/api
 RUN npm install --production
+
 # Reset WORKDIR to /app
 WORKDIR /app 
+
+# 再复制 API 的其他文件
+COPY ./api/ ./api/
 
 # Copy built frontend static assets from the builder stage
 COPY --from=frontend-builder /app/dist/ ./dist/
@@ -46,7 +51,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # Command to run both services
 # API runs from /app/api directory, frontend served by Nginx
-# CMD ["sh", "-c", "cd /app/api && node app.js & nginx -g 'daemon off;'"]
 CMD sh -c "\
   echo 'client running @ http://127.0.0.1:8080/'; \
   cd /app/api && node app.js & nginx -g 'daemon off;'"
