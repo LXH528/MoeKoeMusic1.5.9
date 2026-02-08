@@ -24,8 +24,8 @@ WORKDIR /app
 # Install Nginx
 RUN apk add --no-cache nginx
 
-# 先复制 API 的 package.json 文件
-COPY ./api/package*.json ./api/
+# 修复1：使用绝对路径复制 package.json
+COPY ./api/package*.json /app/api/
 
 # Install API dependencies
 WORKDIR /app/api
@@ -34,23 +34,20 @@ RUN npm install --production
 # Reset WORKDIR to /app
 WORKDIR /app 
 
-# 再复制 API 的其他文件
+# 修复2：复制 API 的其他文件
 COPY ./api/ ./api/
 
 # Copy built frontend static assets from the builder stage
 COPY --from=frontend-builder /app/dist/ ./dist/
 
 # Expose ports
-# For frontend served by 'serve'
 EXPOSE 8080 
-# For API
 EXPOSE 6521 
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Command to run both services
-# API runs from /app/api directory, frontend served by Nginx
 CMD sh -c "\
   echo 'client running @ http://127.0.0.1:8080/'; \
   cd /app/api && node app.js & nginx -g 'daemon off;'"
