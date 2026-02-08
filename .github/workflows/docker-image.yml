@@ -1,0 +1,30 @@
+name: Build and Push MoeKoeMusic Docker Image
+on:
+  push:
+    branches: [ "main" ] # 当代码推送到 main 分支时触发
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # 获取您的代码
+        # 添加以下步骤来设置 Node.js 版本
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # 明确指定使用 Node.js 20
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }} # 您的 Docker Hub 用户名
+          password: ${{ secrets.DOCKERHUB_TOKEN }} # 您的 Docker Hub 访问令牌
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: . # 在当前目录（即您的项目根目录）查找 Dockerfile
+          push: true # 构建完成后立即推送
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/moekoemusic:1.5.9 # 镜像标签
+          platforms: linux/amd64  # 明确指定平台
